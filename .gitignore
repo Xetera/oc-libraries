@@ -1,0 +1,5 @@
+.stack-work/
+oclibraries.cabal
+*~.idea/
+.idea/
+*.iml/
