@@ -25,9 +25,9 @@ searchRequest name = addSearch (Just name) . addUserAgent <$> parseRequest url
     addUserAgent = setRequestHeader "User-Agent" ["memes"]
     addSearch item = C.setQueryString [("q", item)]
 
-search :: String -> IO [String]
+search :: String -> IO [Book]
 search name = do
   request <- searchRequest $ BS.pack name
   response <- httpLBS request
   let body = L8.unpack $ getResponseBody response
-  runX $ parseSearch body
+  parseSearch body
