@@ -1,10 +1,13 @@
 module Parser
-  ( SearchResponse, parseSearch
+  ( SearchResponse
+  , parseSearch
   ) where
 
-import Text.XML.HXT.Core
-import Text.HandsomeSoup
-newtype SearchResponse = SearchResponse String
+import           Text.HandsomeSoup
+import           Text.XML.HXT.Core
+
+newtype SearchResponse =
+  SearchResponse String
 
 titleSelector :: String
 titleSelector = "a[id|=detailLink]"

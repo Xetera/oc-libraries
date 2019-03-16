@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module WebServer
-  ( startServer ) where
+  ( startServer
+  ) where
 
-import Web.Scotty as WS
-import Library as L
-import           Data.Text.Lazy  as T (pack)
-import Control.Monad.IO.Class
+import           Control.Monad.IO.Class
+import           Data.Text.Lazy         as T (pack)
+import           Library                as L
+import           Web.Scotty             as WS
 
 startServer =
   scotty 3000 $
