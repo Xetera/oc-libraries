@@ -8,10 +8,13 @@ module Parser
   , Book
   ) where
 
+import           Control.Applicative (ZipList)
 import           Data.Aeson
-import           GHC.Generics
+import           Debug.Trace         (trace, traceM, traceShow, traceShowId,
+                                      traceShowM)
+import           GHC.Generics        hiding (css)
 import           Text.HandsomeSoup
-import           Text.XML.HXT.Core
+import           Text.XML.HXT.Core   hiding (trace)
 
 data Status = Status
   { library       :: String
@@ -20,22 +23,20 @@ data Status = Status
   , status        :: String
   } deriving (Show, Generic)
 
---data Book = Book
---  { name        :: String
---  , author      :: String
---  , description :: Maybe String
---  , statuses    :: [Status]
+data Book = Book
+  { name        :: String
+  , author      :: String
+  , description :: Maybe String
+  } deriving (Show, Generic)
+
+--  , statuses :: [Status]
 --  , available   :: Int
 --  , holds       :: Int
 --  , copies      :: Int
---  } deriving (Show, Generic)
-data Book = Book
-  { name   :: String
-  , author :: String
-  } deriving (Show, Generic)
-
 newtype SearchResponse =
   SearchResponse String
+
+instance ToJSON Status
 
 instance ToJSON Book
 
@@ -45,20 +46,36 @@ bookSelector = ".results_cell"
 authorSelector :: String
 authorSelector = ".highlightMe.INITIAL_AUTHOR_SRCH"
 
+descriptionSelector :: String
+descriptionSelector = ".highlightMe.BIBSUMMARY"
+
 titleSelector :: String
 titleSelector = "a[id|=detailLink]"
 
-extractTitles doc = doc >>> css titleSelector ! "title"
+tableSelector :: String
+tableSelector = "table.sortable"
+
+locationSelector :: String
+locationSelector = "tbody tr"
+
+locationCellSelector :: String
+locationCellSelector = "td"
+
+titles = css titleSelector ! "title"
+
+authors = css authorSelector >>> deepest getText
+
+description' = (css descriptionSelector >>> deepest getText >>> arr Just) `orElse` arr (const Nothing)
+
+--statuses = css >>> tableSelector >>>
 
 extractBooks doc = doc >>> css bookSelector
-
-extractAuthors doc = doc >>> css authorSelector >>> deepest getText
 
 parse = readString [withParseHTML yes, withWarnings no]
 
 parseSearch :: String -> IO [Book]
 parseSearch html = do
   let books = extractBooks $ parse html
-  authors <- runX $ extractAuthors books
-  names <- runX $ extractTitles books
-  return $ zipWith (\name author -> Book { name, author }) names authors
+  runX $
+    books >>>
+    (titles &&& authors &&& description') >>> arr (\(name, (author, description)) -> Book {name, author, description})
